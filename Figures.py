@@ -1,6 +1,12 @@
 import math
 import cv2
+import json
 import numpy as np
+
+with open('Objects/camera_intrinsics.json', 'r') as file:
+    data = json.load(file)
+measure_factor = data['ppy'] / data['ffy']
+file.close()
 
 shapes = 0
 
@@ -34,10 +40,10 @@ if circles is not None:
     circles = np.round(circles[0, :]).astype("int")
     for (x, y, r) in circles:
         shapes = shapes + 1
+        converted_radius = round(r * measure_factor)
         cv2.circle(img, (x, y), r, (225, 0, 0), 3)
-        cv2.putText(img, 'Circle radius ' + str(r), (x - r - 20, y - r - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
-                    (0, 0, 0),
-                    2)
+        cv2.putText(img, 'Circle radius ' + str(converted_radius) + ' mm', (x - r - 20, y - r - 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 
 for cnt in contours:
     x1, y1 = cnt[0][0]
@@ -48,9 +54,10 @@ for cnt in contours:
         if 0.9 <= ratio <= 1.1:
             shapes = shapes + 1
             edge = round(get_edge(approx[0], approx[1]))
+            converted_edge = round(edge * measure_factor)
             img = cv2.drawContours(img, [cnt], -1, (0, 255, 0), 3)
-            cv2.putText(img, 'Square edge ' + str(edge), (x1 - 20, y1 - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0),
-                        2)
+            cv2.putText(img, 'Square edge ' + str(converted_edge) + ' mm', (x1 - 20, y1 - 20), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6, (0, 0, 0), 2)
 
     if len(approx) == 3:
         shapes = shapes + 1
